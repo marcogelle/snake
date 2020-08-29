@@ -3,6 +3,7 @@ import random
 
 SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
+FPS = 15
 BG_COLOR = (0, 0, 0) # black
 GRID_SIZE = 20
 assert SCRN_HEIGHT % GRID_SIZE == 0
@@ -29,10 +30,10 @@ class Square:
         pygame.draw.rect(screen, self.color, (x_coord, y_coord, GRID_SIZE, GRID_SIZE))
 
 class Food(Square):
-    color = (255, 0, 0)
+    color = (255, 0, 0) # red
 
 class SnakePart(Square):
-    color = (102, 255, 0)
+    color = (102, 255, 0) # green
 
 class Snake:
     def __init__(self, x: int, y: int) -> None:
@@ -40,6 +41,10 @@ class Snake:
 
     def draw(self) -> None:
         self.head.draw()
+
+    def move(self, dx, dy) -> None:
+        self.head.x += dx
+        self.head.y += dy
 
 def redrawGameWindow() -> None:
     screen.fill(BG_COLOR)
@@ -50,9 +55,10 @@ def redrawGameWindow() -> None:
 
 snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
 food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
+dx, dy = 0, 0
 run = True
 while run:
-    clock.tick(30)
+    clock.tick(FPS)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -61,13 +67,14 @@ while run:
     if keys[pygame.K_ESCAPE]:
         run = False
     if keys[pygame.K_UP]:
-        pass
+        dx, dy = 0, -1
     if keys[pygame.K_DOWN]:
-        pass
+        dx, dy = 0, 1
     if keys[pygame.K_LEFT]:
-        pass
+        dx, dy = -1, 0
     if keys[pygame.K_RIGHT]:
-        pass
+        dx, dy = 1, 0
+    snake.move(dx, dy)
 
     redrawGameWindow()
 
