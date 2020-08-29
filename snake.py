@@ -16,35 +16,39 @@ screen = pygame.display.set_mode((SCRN_HEIGHT, SCRN_WIDTH))
 pygame.display.set_caption("Snake")
 clock = pygame.time.Clock()
 
-class Food:
-    color = (255, 0, 0)
+class Square:
+    color = None
 
-    def __init__(self, x: int, y: int):
+    def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
 
     def draw(self):
         x_coord = self.x * GRID_SIZE
         y_coord = self.y * GRID_SIZE
-        pygame.draw.rect(screen, Food.color, (x_coord, y_coord, GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(screen, self.color, (x_coord, y_coord, GRID_SIZE, GRID_SIZE))
 
-class Snake:
+class Food(Square):
+    color = (255, 0, 0)
+
+class SnakePart(Square):
     color = (102, 255, 0)
 
-    def __init__(self):
-        pass
+class Snake:
+    def __init__(self, x: int, y: int) -> None:
+        self.head = SnakePart(x, y)
 
-    def draw(self):
-        pass
+    def draw(self) -> None:
+        self.head.draw()
 
-def redrawGameWindow():
+def redrawGameWindow() -> None:
     screen.fill(BG_COLOR)
     snake.draw()
     food.draw()
 
     pygame.display.update()
 
-snake = Snake()
+snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
 food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
 run = True
 while run:
