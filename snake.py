@@ -7,39 +7,21 @@ SCRN_WIDTH = 600
 FPS = 14
 BG_COLOR = (0, 0, 0) # black
 GRID_SIZE = 20
-assert SCRN_HEIGHT % GRID_SIZE == 0
 GRID_HEIGHT = SCRN_HEIGHT // GRID_SIZE
-assert SCRN_WIDTH % GRID_SIZE == 0
 GRID_WIDTH = SCRN_WIDTH // GRID_SIZE
-
-pygame.init()
-
-screen = pygame.display.set_mode((SCRN_WIDTH, SCRN_HEIGHT))
-pygame.display.set_caption("Snake")
-clock = pygame.time.Clock()
 
 class Square:
     color = None
 
-    def __init__(self, x: int, y: int) -> None:
+    def __init__(self, x: int, y: int, screen: pygame.Surface) -> None:
         self.x = x
         self.y = y
+        self.screen = screen
 
     def draw(self):
         x_coord = self.x * GRID_SIZE
         y_coord = self.y * GRID_SIZE
-        pygame.draw.rect(screen, self.color, (x_coord, y_coord, GRID_SIZE, GRID_SIZE))
-
-class Food(Square):
-    color = (255, 0, 0) # red
-
-    def spawn(self):
-        self.x = random.randrange(GRID_WIDTH)
-        self.y = random.randrange(GRID_HEIGHT)
-        snake_pos_set = snake.positions()
-        while (self.x, self.y) in snake_pos_set:
-            self.x = random.randrange(GRID_WIDTH)
-            self.y = random.randrange(GRID_HEIGHT)
+        pygame.draw.rect(self.screen, self.color, (x_coord, y_coord, GRID_SIZE, GRID_SIZE))
 
 class SnakePart(Square):
     color = (102, 255, 0) # green
@@ -51,8 +33,9 @@ class SnakePart(Square):
 class Snake:
     growth_factor = 3
 
-    def __init__(self, x: int, y: int) -> None:
-        self.parts = [SnakePart(x, y)]
+    def __init__(self, x: int, y: int, screen: pygame.Surface) -> None:
+        self.screen = screen
+        self.parts = [SnakePart(x, y, self.screen)]
 
     def __len__(self):
         return len(self.parts)
@@ -84,7 +67,7 @@ class Snake:
     def grow(self) -> None:
         tail = self.parts[-1]
         for _ in range(Snake.growth_factor):
-            self.parts.append(SnakePart(tail.x, tail.y))
+            self.parts.append(SnakePart(tail.x, tail.y, self.screen))
 
     def head_x(self) -> int:
         return self.parts[0].x
@@ -95,7 +78,22 @@ class Snake:
     def positions(self) -> Set[Tuple[int, int]]:
         return {(p.x, p.y) for p in self.parts}
 
-def update_snake_dir(event: pygame.event.Event, dx: int, dy: int) -> Tuple[int, int]:
+class Food(Square):
+    color = (255, 0, 0) # red
+
+    def __init__(self, x: int, y: int, screen: pygame.Surface, snake: Snake) -> None:
+        super().__init__(x, y, screen)
+        self.snake = snake
+
+    def spawn(self):
+        self.x = random.randrange(GRID_WIDTH)
+        self.y = random.randrange(GRID_HEIGHT)
+        snake_pos_set = self.snake.positions()
+        while (self.x, self.y) in snake_pos_set:
+            self.x = random.randrange(GRID_WIDTH)
+            self.y = random.randrange(GRID_HEIGHT)
+
+def update_snake_dir(snake: Snake, event: pygame.event.Event, dx: int, dy: int) -> Tuple[int, int]:
     if event.key in {pygame.K_UP, ord('w')} and (dy != 1 or len(snake) == 1):
         dx, dy = 0, -1
     if event.key in {pygame.K_DOWN, ord('s')} and (dy != -1 or len(snake) == 1):
@@ -106,44 +104,56 @@ def update_snake_dir(event: pygame.event.Event, dx: int, dy: int) -> Tuple[int, 
         dx, dy = 1, 0
     return dx, dy
 
-def checkFood() -> None:
+def check_food(snake: Snake, food: Food) -> None:
     if food.x == snake.head_x() and food.y == snake.head_y():
         snake.grow()
         food.spawn()
 
-def redrawGameWindow() -> None:
+def redraw_screen(screen: pygame.Surface, snake: Snake, food: Food) -> None:
     screen.fill(BG_COLOR)
     snake.draw()
     food.draw()
     pygame.display.update()
 
-snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
-dx, dy = 0, 0
-food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
+def run_game() -> None:
+    pygame.init()
 
-# mainloop
-run = True
-while run:
-    clock.tick(FPS)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+    screen = pygame.display.set_mode((SCRN_WIDTH, SCRN_HEIGHT))
+    pygame.display.set_caption("Snake")
+    clock = pygame.time.Clock()
+
+    snake = Snake(random.randrange(0, GRID_WIDTH),
+        random.randrange(0, GRID_HEIGHT), screen)
+    dx, dy = 0, 0
+    food = Food(random.randrange(0, GRID_WIDTH),
+        random.randrange(0, GRID_HEIGHT), screen, snake)
+
+    # mainloop
+    run = True
+    while run:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    run = False
+                dx, dy = update_snake_dir(snake, event, dx, dy)
+
+        snake.move(dx, dy)
+        if (snake.head_x() < 0 or snake.head_x() >= GRID_WIDTH or
+            snake.head_y() < 0 or snake.head_y() >= GRID_HEIGHT):
             run = False
 
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                run = False
-            dx, dy = update_snake_dir(event, dx, dy)
+        if snake.self_collide():
+            run = False
 
-    snake.move(dx, dy)
-    if (snake.head_x() < 0 or snake.head_x() >= GRID_WIDTH or
-        snake.head_y() < 0 or snake.head_y() >= GRID_HEIGHT):
-        run = False
+        check_food(snake, food)
 
-    if snake.self_collide():
-        run = False
+        redraw_screen(screen, snake, food)
 
-    checkFood()
+    pygame.quit()
 
-    redrawGameWindow()
-
-pygame.quit()
+if __name__ == '__main__':
+    run_game()
