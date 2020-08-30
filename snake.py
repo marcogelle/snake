@@ -65,7 +65,6 @@ class Snake:
             trail_x, trail_y = part.x, part.y
             part.move(dx, dy)
 
-        print([(p.x, p.y) for p in self.parts])
         open_spots.add((trail_x, trail_y))
         tail = self.parts[-1]
         if (tail.x, tail.y) in open_spots:
