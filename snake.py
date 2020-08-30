@@ -1,6 +1,6 @@
 import pygame
 import random
-from typing import Tuple
+from typing import Tuple, Set
 
 SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
@@ -33,9 +33,10 @@ class Square:
 class Food(Square):
     color = (255, 0, 0) # red
 
-    def spawn(self): # TODO: do not spawn where snake is
-        self.x = random.randrange(0, GRID_WIDTH)
-        self.y = random.randrange(0, GRID_HEIGHT)
+    def spawn(self):
+        import pdb
+        pdb.set_trace()
+        self.x, self.y = random.sample(open_spots, 1)
 
 class SnakePart(Square):
     color = (102, 255, 0) # green
@@ -66,10 +67,19 @@ class Snake:
             trail_x, trail_y = part.x, part.y
             part.move(dx, dy)
 
+        print([(p.x, p.y) for p in self.parts])
+        open_spots.add((trail_x, trail_y))
+        tail = self.parts[-1]
+        if (tail.x, tail.y) in open_spots:
+            open_spots.remove((tail.x, tail.y))
+        if (head.x, head.y) in open_spots:
+            open_spots.remove((head.x, head.y))
+
     def self_collide(self) -> bool:
         if (len(self) == 1 + Snake.growth_factor and
-            len({(p.x, p.y) for p in self.parts}) == 1):
+            len(self.positions()) == 1):
             return False
+
         head = self.parts[0]
         for p in self.parts[1:]:
             if head.x == p.x and head.y == p.y:
@@ -86,6 +96,9 @@ class Snake:
 
     def head_y(self) -> int:
         return self.parts[0].y
+
+    def positions(self) -> Set[Tuple[int, int]]:
+        return {(p.x, p.y) for p in self.parts}
 
 def update_snake_dir(keys: Tuple[bool, ...], dx: int, dy: int) -> Tuple[int, int]:
     if keys[pygame.K_UP] and (dy != 1 or len(snake) == 1):
@@ -110,8 +123,10 @@ def redrawGameWindow() -> None:
     pygame.display.update()
 
 snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
-food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
 dx, dy = 0, 0
+food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
+open_spots = {(x, y) for (x, y) in zip(range(GRID_WIDTH), range(GRID_HEIGHT))
+    if (x, y) not in snake.positions()}
 
 # mainloop
 run = True
