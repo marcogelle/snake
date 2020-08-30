@@ -4,7 +4,7 @@ from typing import Tuple
 
 SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
-FPS = 13
+FPS = 14
 BG_COLOR = (0, 0, 0) # black
 GRID_SIZE = 20
 assert SCRN_HEIGHT % GRID_SIZE == 0
@@ -14,7 +14,7 @@ GRID_WIDTH = SCRN_WIDTH // GRID_SIZE
 
 pygame.init()
 
-screen = pygame.display.set_mode((SCRN_HEIGHT, SCRN_WIDTH))
+screen = pygame.display.set_mode((SCRN_WIDTH, SCRN_HEIGHT))
 pygame.display.set_caption("Snake")
 clock = pygame.time.Clock()
 
@@ -45,8 +45,13 @@ class SnakePart(Square):
         self.y += dy
 
 class Snake:
+    growth_factor = 3
+
     def __init__(self, x: int, y: int) -> None:
         self.parts = [SnakePart(x, y)]
+
+    def __len__(self):
+        return len(self.parts)
 
     def draw(self) -> None:
         for part in self.parts:
@@ -61,9 +66,20 @@ class Snake:
             trail_x, trail_y = part.x, part.y
             part.move(dx, dy)
 
+    def self_collide(self) -> bool:
+        if (len(self) == 1 + Snake.growth_factor and
+            len({(p.x, p.y) for p in self.parts}) == 1):
+            return False
+        head = self.parts[0]
+        for p in self.parts[1:]:
+            if head.x == p.x and head.y == p.y:
+                return True
+        return False
+
     def grow(self) -> None:
         tail = self.parts[-1]
-        self.parts.append(SnakePart(tail.x, tail.y))
+        for _ in range(Snake.growth_factor):
+            self.parts.append(SnakePart(tail.x, tail.y))
 
     def head_x(self) -> int:
         return self.parts[0].x
@@ -72,13 +88,13 @@ class Snake:
         return self.parts[0].y
 
 def update_snake_dir(keys: Tuple[bool, ...], dx: int, dy: int) -> Tuple[int, int]:
-    if keys[pygame.K_UP]:
+    if keys[pygame.K_UP] and (dy != 1 or len(snake) == 1):
         dx, dy = 0, -1
-    if keys[pygame.K_DOWN]:
+    if keys[pygame.K_DOWN] and (dy != -1 or len(snake) == 1):
         dx, dy = 0, 1
-    if keys[pygame.K_LEFT]:
+    if keys[pygame.K_LEFT] and (dx != 1 or len(snake) == 1):
         dx, dy = -1, 0
-    if keys[pygame.K_RIGHT]:
+    if keys[pygame.K_RIGHT] and (dx != -1 or len(snake) == 1):
         dx, dy = 1, 0
     return dx, dy
 
@@ -115,7 +131,11 @@ while run:
         snake.head_y() < 0 or snake.head_y() >= GRID_HEIGHT):
         run = False
 
+    if snake.self_collide():
+        run = False
+
     checkFood()
+
     redrawGameWindow()
 
 pygame.quit()
