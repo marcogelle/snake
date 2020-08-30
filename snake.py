@@ -5,7 +5,7 @@ from typing import Tuple, Set
 SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
 FPS = 14
-BG_COLOR = (0, 0, 0) # black
+BG_COLOR = (0, 0, 0)
 GRID_SIZE = 20
 GRID_HEIGHT = SCRN_HEIGHT // GRID_SIZE
 GRID_WIDTH = SCRN_WIDTH // GRID_SIZE
@@ -24,7 +24,7 @@ class Square:
         pygame.draw.rect(self.screen, self.color, (x_coord, y_coord, GRID_SIZE, GRID_SIZE))
 
 class SnakePart(Square):
-    color = (102, 255, 0) # green
+    color = (102, 255, 0)
 
     def move(self, dx, dy) -> None:
         self.x += dx
@@ -79,16 +79,12 @@ class Snake:
         return {(p.x, p.y) for p in self.parts}
 
 class Food(Square):
-    color = (255, 0, 0) # red
+    color = (255, 0, 0)
 
-    def __init__(self, x: int, y: int, screen: pygame.Surface, snake: Snake) -> None:
-        super().__init__(x, y, screen)
-        self.snake = snake
-
-    def spawn(self):
+    def spawn(self, snake: Snake):
         self.x = random.randrange(GRID_WIDTH)
         self.y = random.randrange(GRID_HEIGHT)
-        snake_pos_set = self.snake.positions()
+        snake_pos_set = snake.positions()
         while (self.x, self.y) in snake_pos_set:
             self.x = random.randrange(GRID_WIDTH)
             self.y = random.randrange(GRID_HEIGHT)
@@ -107,7 +103,7 @@ def update_snake_dir(snake: Snake, event: pygame.event.Event, dx: int, dy: int) 
 def check_food(snake: Snake, food: Food) -> None:
     if food.x == snake.head_x() and food.y == snake.head_y():
         snake.grow()
-        food.spawn()
+        food.spawn(snake)
 
 def redraw_screen(screen: pygame.Surface, snake: Snake, food: Food) -> None:
     screen.fill(BG_COLOR)
@@ -126,7 +122,7 @@ def run_game() -> None:
         GRID_HEIGHT), screen)
     dx, dy = 0, 0
     food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0,
-        GRID_HEIGHT), screen, snake)
+        GRID_HEIGHT), screen)
 
     # mainloop
     run = True
