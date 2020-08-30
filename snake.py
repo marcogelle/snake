@@ -4,7 +4,7 @@ from typing import Tuple, Set
 
 SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
-FPS = 14
+FPS = 15
 BG_COLOR = (0, 0, 0) # black
 GRID_SIZE = 20
 assert SCRN_HEIGHT % GRID_SIZE == 0
@@ -34,7 +34,11 @@ class Food(Square):
     color = (255, 0, 0) # red
 
     def spawn(self):
-        self.x, self.y = random.sample(open_spots, 1)[0]
+        self.x = random.randrange(GRID_WIDTH)
+        self.y = random.randrange(GRID_HEIGHT)
+        while (self.x, self.y) in snake.positions():
+            self.x = random.randrange(GRID_WIDTH)
+            self.y = random.randrange(GRID_HEIGHT)
 
 class SnakePart(Square):
     color = (102, 255, 0) # green
@@ -64,13 +68,6 @@ class Snake:
             dx, dy = trail_x - part.x, trail_y - part.y
             trail_x, trail_y = part.x, part.y
             part.move(dx, dy)
-
-        open_spots.add((trail_x, trail_y))
-        tail = self.parts[-1]
-        if (tail.x, tail.y) in open_spots:
-            open_spots.remove((tail.x, tail.y))
-        if (head.x, head.y) in open_spots:
-            open_spots.remove((head.x, head.y))
 
     def self_collide(self) -> bool:
         if (len(self) == 1 + Snake.growth_factor and
@@ -122,8 +119,6 @@ def redrawGameWindow() -> None:
 snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
 dx, dy = 0, 0
 food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
-open_spots = {(x, y) for (x, y) in zip(range(GRID_WIDTH), range(GRID_HEIGHT))
-    if (x, y) not in snake.positions()}
 
 # mainloop
 run = True
