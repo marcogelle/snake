@@ -4,7 +4,7 @@ from typing import Tuple, Set
 
 SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
-FPS = 15
+FPS = 14
 BG_COLOR = (0, 0, 0) # black
 GRID_SIZE = 20
 assert SCRN_HEIGHT % GRID_SIZE == 0
@@ -96,13 +96,13 @@ class Snake:
         return {(p.x, p.y) for p in self.parts}
 
 def update_snake_dir(event: pygame.event.Event, dx: int, dy: int) -> Tuple[int, int]:
-    if event.key == pygame.K_UP and (dy != 1 or len(snake) == 1):
+    if event.key in {pygame.K_UP, ord('w')} and (dy != 1 or len(snake) == 1):
         dx, dy = 0, -1
-    if event.key == pygame.K_DOWN and (dy != -1 or len(snake) == 1):
+    if event.key in {pygame.K_DOWN, ord('s')} and (dy != -1 or len(snake) == 1):
         dx, dy = 0, 1
-    if event.key == pygame.K_LEFT and (dx != 1 or len(snake) == 1):
+    if event.key in {pygame.K_LEFT, ord('a')} and (dx != 1 or len(snake) == 1):
         dx, dy = -1, 0
-    if event.key == pygame.K_RIGHT and (dx != -1 or len(snake) == 1):
+    if event.key in {pygame.K_RIGHT, ord('d')} and (dx != -1 or len(snake) == 1):
         dx, dy = 1, 0
     return dx, dy
 
