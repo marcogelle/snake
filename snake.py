@@ -149,6 +149,8 @@ def run_game() -> None:
 
         redraw_screen(screen, snake, food)
 
+    print(f'Final snake length: {len(snake)}')
+
     pygame.quit()
 
 if __name__ == '__main__':
