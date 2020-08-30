@@ -34,9 +34,7 @@ class Food(Square):
     color = (255, 0, 0) # red
 
     def spawn(self):
-        import pdb
-        pdb.set_trace()
-        self.x, self.y = random.sample(open_spots, 1)
+        self.x, self.y = random.sample(open_spots, 1)[0]
 
 class SnakePart(Square):
     color = (102, 255, 0) # green
