@@ -36,7 +36,8 @@ class Food(Square):
     def spawn(self):
         self.x = random.randrange(GRID_WIDTH)
         self.y = random.randrange(GRID_HEIGHT)
-        while (self.x, self.y) in snake.positions():
+        snake_pos_set = snake.positions()
+        while (self.x, self.y) in snake_pos_set:
             self.x = random.randrange(GRID_WIDTH)
             self.y = random.randrange(GRID_HEIGHT)
 
@@ -94,14 +95,14 @@ class Snake:
     def positions(self) -> Set[Tuple[int, int]]:
         return {(p.x, p.y) for p in self.parts}
 
-def update_snake_dir(keys: Tuple[bool, ...], dx: int, dy: int) -> Tuple[int, int]:
-    if keys[pygame.K_UP] and (dy != 1 or len(snake) == 1):
+def update_snake_dir(event: pygame.event.Event, dx: int, dy: int) -> Tuple[int, int]:
+    if event.key == pygame.K_UP and (dy != 1 or len(snake) == 1):
         dx, dy = 0, -1
-    if keys[pygame.K_DOWN] and (dy != -1 or len(snake) == 1):
+    if event.key == pygame.K_DOWN and (dy != -1 or len(snake) == 1):
         dx, dy = 0, 1
-    if keys[pygame.K_LEFT] and (dx != 1 or len(snake) == 1):
+    if event.key == pygame.K_LEFT and (dx != 1 or len(snake) == 1):
         dx, dy = -1, 0
-    if keys[pygame.K_RIGHT] and (dx != -1 or len(snake) == 1):
+    if event.key == pygame.K_RIGHT and (dx != -1 or len(snake) == 1):
         dx, dy = 1, 0
     return dx, dy
 
@@ -116,6 +117,8 @@ def redrawGameWindow() -> None:
     food.draw()
     pygame.display.update()
 
+debug = False
+
 snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
 dx, dy = 0, 0
 food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
@@ -128,11 +131,11 @@ while run:
         if event.type == pygame.QUIT:
             run = False
 
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_ESCAPE]:
-        run = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                run = False
+            dx, dy = update_snake_dir(event, dx, dy)
 
-    dx, dy = update_snake_dir(keys, dx, dy)
     snake.move(dx, dy)
     if (snake.head_x() < 0 or snake.head_x() >= GRID_WIDTH or
         snake.head_y() < 0 or snake.head_y() >= GRID_HEIGHT):
