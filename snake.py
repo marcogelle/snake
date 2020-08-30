@@ -117,8 +117,6 @@ def redrawGameWindow() -> None:
     food.draw()
     pygame.display.update()
 
-debug = False
-
 snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
 dx, dy = 0, 0
 food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0, GRID_HEIGHT))
