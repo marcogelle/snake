@@ -122,11 +122,11 @@ def run_game() -> None:
     pygame.display.set_caption("Snake")
     clock = pygame.time.Clock()
 
-    snake = Snake(random.randrange(0, GRID_WIDTH),
-        random.randrange(0, GRID_HEIGHT), screen)
+    snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0,
+        GRID_HEIGHT), screen)
     dx, dy = 0, 0
-    food = Food(random.randrange(0, GRID_WIDTH),
-        random.randrange(0, GRID_HEIGHT), screen, snake)
+    food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0,
+        GRID_HEIGHT), screen, snake)
 
     # mainloop
     run = True
