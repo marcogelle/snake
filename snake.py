@@ -3,7 +3,7 @@ import random
 
 SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
-FPS = 15
+FPS = 13
 BG_COLOR = (0, 0, 0) # black
 GRID_SIZE = 20
 assert SCRN_HEIGHT % GRID_SIZE == 0
@@ -32,19 +32,38 @@ class Square:
 class Food(Square):
     color = (255, 0, 0) # red
 
+    def spawn(self): # TODO: do not spawn where snake is
+        self.x = random.randrange(0, GRID_WIDTH)
+        self.y = random.randrange(0, GRID_HEIGHT)
+
 class SnakePart(Square):
     color = (102, 255, 0) # green
 
+    def move(self, dx, dy) -> None:
+        self.x += dx
+        self.y += dy
+
 class Snake:
     def __init__(self, x: int, y: int) -> None:
-        self.head = SnakePart(x, y)
+        self.parts = [SnakePart(x, y)]
 
     def draw(self) -> None:
-        self.head.draw()
+        for part in self.parts:
+            part.draw()
 
     def move(self, dx, dy) -> None:
-        self.head.x += dx
-        self.head.y += dy
+        head = self.parts[0]
+        trail_x, trail_y = head.x, head.y
+
+        head.move(dx, dy)
+        if (head.x < 0 or head.x >= GRID_WIDTH or
+            head.y < 0 or head.y >= GRID_HEIGHT):
+            run = False
+
+        for part in self.parts[1:]:
+            dx, dy = trail_x - part.x, trail_y - part.y
+            trail_x, trail_y = part.x, part.y
+            part.move(dx, dy)
 
 def redrawGameWindow() -> None:
     screen.fill(BG_COLOR)
