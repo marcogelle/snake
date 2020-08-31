@@ -1,6 +1,10 @@
 import pygame
 import random
 from typing import Tuple, Set
+import os
+import neat
+import visualize
+import snake
 
 SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
@@ -114,7 +118,7 @@ def redraw_screen(screen: pygame.Surface, snake: Snake, food: Food) -> None:
     food.draw()
     pygame.display.update()
 
-def run_game() -> None:
+def run(config_path) -> None:
     pygame.init()
 
     screen = pygame.display.set_mode((SCRN_WIDTH, SCRN_HEIGHT))
@@ -128,25 +132,25 @@ def run_game() -> None:
         GRID_HEIGHT), screen)
 
     # mainloop
-    run = True
-    while run:
+    running = True
+    while running:
         clock.tick(FPS)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run = False
+                running = False
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
-                    run = False
+                    running = False
                 dx, dy = update_snake_dir(snake, event, dx, dy)
 
         snake.move(dx, dy)
         if (snake.head_x() < 0 or snake.head_x() >= GRID_WIDTH or
             snake.head_y() < 0 or snake.head_y() >= GRID_HEIGHT):
-            run = False
+            running = False
 
         if snake.self_collide():
-            run = False
+            running = False
 
         check_food(snake, food)
 
@@ -157,4 +161,6 @@ def run_game() -> None:
     pygame.quit()
 
 if __name__ == '__main__':
-    run_game()
+    local_dir = os.path.dirname(__file__)
+    config_path = os.path.join(local_dir, 'config')
+    run(config_path)
