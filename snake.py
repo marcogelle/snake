@@ -30,12 +30,15 @@ class SnakePart(Square):
         self.x += dx
         self.y += dy
 
+class SnakeHead(SnakePart):
+    color = (20, 200, 0)
+
 class Snake:
     growth_factor = 3
 
     def __init__(self, x: int, y: int, screen: pygame.Surface) -> None:
         self.screen = screen
-        self.parts = [SnakePart(x, y, self.screen)]
+        self.parts = [SnakeHead(x, y, self.screen)]
 
     def __len__(self):
         return len(self.parts)
