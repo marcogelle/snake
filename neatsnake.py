@@ -10,10 +10,28 @@ def get_inputs(snake, food, dx, dy):
     pass
 
 def eval_genomes(genomes, config):
-    snake = playsnake.Snake(random.randrange(0, playsnake.GRID_WIDTH),
-        random.randrange(0, playsnake.GRID_HEIGHT))
-    food = playsnake.Food(random.randrange(0, playsnake.GRID_WIDTH),
-        random.randrange(0, playsnake.GRID_HEIGHT))
+    nets = []
+    snakes = []
+    food_list = []
+    ge = []
+    for _, genome in genomes:
+        genome.fitness = 0
+
+        net = neat.nn.FeedForwardNetwork.create(genome, config)
+        snake = playsnake.Snake(random.randrange(0, playsnake.GRID_WIDTH),
+            random.randrange(0, playsnake.GRID_HEIGHT))
+        food = playsnake.Food(random.randrange(0, playsnake.GRID_WIDTH),
+            random.randrange(0, playsnake.GRID_HEIGHT))
+
+        nets.append(net)
+        snakes.append(snake)
+        food_list.append(food)
+        ge.append(genome)
+
+
+
+
+
     dx, dy = 0, 0
 
     run = True
@@ -21,9 +39,9 @@ def eval_genomes(genomes, config):
         inputs = get_inputs(snake, food, dx, dy)
 
 
+
         snake.move(dx, dy)
-        if (snake.head_x() < 0 or snake.head_x() >= GRID_WIDTH or
-            snake.head_y() < 0 or snake.head_y() >= GRID_HEIGHT):
+        if (playsnake.outside(snake.head_x(), snake.head_y())):
             run = False
 
         if snake.self_collide():
