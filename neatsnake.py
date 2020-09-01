@@ -5,6 +5,8 @@ import os
 import neat
 import playsnake
 
+DISPLAY = False
+
 def get_inputs(snake, food):
     x, y = snake.head_x(), snake.head_y()
     inputs = []
@@ -58,12 +60,15 @@ def orient_neat_snake(snake, net, inputs):
         assert RuntimeError("The neural net has more than 4 outputs????")
 
 def eval_genomes(genomes, config):
-    pygame.init()
-    screen = pygame.display.set_mode((playsnake.SCRN_WIDTH,
-        playsnake.SCRN_HEIGHT))
-    pygame.display.set_caption("First Individual of this Population")
-    clock = pygame.time.Clock()
-    # screen = None
+    screen, clock = None, None
+    if DISPLAY:
+        pygame.init()
+        screen = pygame.display.set_mode((playsnake.SCRN_WIDTH,
+            playsnake.SCRN_HEIGHT))
+        pygame.display.set_caption("First Individual of this Population")
+        clock = pygame.time.Clock()
+    else:
+        screen = None
 
     nets = []
     snakes = []
@@ -87,14 +92,15 @@ def eval_genomes(genomes, config):
     first = True
     run = True
     while run and snakes:
-        clock.tick(playsnake.FPS)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                run = False
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+        if DISPLAY:
+            clock.tick(playsnake.FPS)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     run = False
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        run = False
 
         for net, snake, food, genome in zip(nets, snakes, food_list, gen_list):
             inputs = get_inputs(snake, food)
@@ -120,11 +126,12 @@ def eval_genomes(genomes, config):
             else:
                 no_food[i] += 1
 
+        eleven = 100
         for i, nf in enumerate(no_food):
-            if nf >= 100:
+            if nf >= eleven:
                 gen_list[i].fitness -= 100
         for i, nf in enumerate(no_food):
-            if nf >= 15:
+            if nf >= eleven:
                 nets.pop(i)
                 snakes.pop(i)
                 food_list.pop(i)
@@ -133,10 +140,11 @@ def eval_genomes(genomes, config):
                 if i == 0:
                     first = False
 
-        if first:
+        if DISPLAY and first:
             playsnake.redraw_screen(screen, snakes[0], food_list[0])
 
-    pygame.quit()
+    if DISPLAY:
+        pygame.quit()
 
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
