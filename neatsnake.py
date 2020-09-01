@@ -4,28 +4,32 @@ from typing import Tuple, Set
 import os
 import neat
 import visualize
-import snake
+import playsnake
+
+def get_inputs(snake, food, dx, dy):
+    pass
 
 def eval_genomes(genomes, config):
-    snk = Snake(random.randrange(0, snake.GRID_WIDTH), random.randrange(0,
-        snake.GRID_HEIGHT))
-    food = Food(random.randrange(0, snake.GRID_WIDTH), random.randrange(0,
-        GRID_HEIGHT))
+    snake = playsnake.Snake(random.randrange(0, playsnake.GRID_WIDTH),
+        random.randrange(0, playsnake.GRID_HEIGHT))
+    food = playsnake.Food(random.randrange(0, playsnake.GRID_WIDTH),
+        random.randrange(0, playsnake.GRID_HEIGHT))
     dx, dy = 0, 0
 
     run = True
     while run:
+        inputs = get_inputs(snake, food, dx, dy)
 
 
-        snk.move(dx, dy)
-        if (snk.head_x() < 0 or snk.head_x() >= GRID_WIDTH or
-            snk.head_y() < 0 or snk.head_y() >= GRID_HEIGHT):
+        snake.move(dx, dy)
+        if (snake.head_x() < 0 or snake.head_x() >= GRID_WIDTH or
+            snake.head_y() < 0 or snake.head_y() >= GRID_HEIGHT):
             run = False
 
-        if snk.self_collide():
+        if snake.self_collide():
             run = False
 
-        snake.check_food(snk, food)
+        playsnake.check_food(snake, food)
 
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
