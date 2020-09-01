@@ -6,7 +6,7 @@ SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
 FPS = 14
 BG_COLOR = (0, 0, 0)
-GRID_SIZE = 20
+GRID_SIZE = 60
 GRID_HEIGHT = SCRN_HEIGHT // GRID_SIZE
 GRID_WIDTH = SCRN_WIDTH // GRID_SIZE
 
@@ -105,6 +105,9 @@ def update_snake_dir(snake: Snake, event: pygame.event.Event, dx: int, dy: int) 
         dx, dy = 1, 0
     return dx, dy
 
+def outside(x: int, y: int) -> bool:
+    return x < 0 or x >= GRID_WIDTH or y < 0 or y >= GRID_HEIGHT
+
 def check_food(snake: Snake, food: Food) -> None:
     if food.x == snake.head_x() and food.y == snake.head_y():
         snake.grow()
@@ -143,8 +146,7 @@ def run_game() -> None:
                 dx, dy = update_snake_dir(snake, event, dx, dy)
 
         snake.move(dx, dy)
-        if (snake.head_x() < 0 or snake.head_x() >= GRID_WIDTH or
-            snake.head_y() < 0 or snake.head_y() >= GRID_HEIGHT):
+        if (outside(snake.head_x(), snake.head_y())):
             run = False
 
         if snake.self_collide():
