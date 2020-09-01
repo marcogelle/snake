@@ -5,39 +5,25 @@ import os
 import neat
 import playsnake
 
-DISPLAY = False
+DIRS = ((0, -1), (1, 0), (0, 1), (-1, 0))
+RIGHT = {DIRS[0]: DIRS[1], DIRS[1]: DIRS[2], DIRS[2]: DIRS[3], DIRS[3]: DIRS[0],
+    (0, 0): DIRS[random.randrange(4)]}
+LEFT = {DIRS[0]: DIRS[3], DIRS[3]: DIRS[2], DIRS[2]: DIRS[1], DIRS[1]: DIRS[0],
+    (0, 0): DIRS[random.randrange(4)]}
 
 def get_inputs(snake, food):
-    x, y = snake.head_x(), snake.head_y()
-    inputs = []
-
-    # Distance to food
-    inputs.append(food.x - x)
-    inputs.append(food.y - y)
-
-    # Distances to walls
-    inputs.append(y)
-    inputs.append(playsnake.GRID_HEIGHT - y)
-    inputs.append(x)
-    inputs.append(playsnake.GRID_WIDTH - x)
-
-    # Distances to snake parts. -1 if no snake part in that direction.
-    pos = snake.positions()
-    for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0), (1, -1), (1, 1), (-1, 1), (-1, -1)):
-        x1, y1 = x, y
-        i = 0
-        found = False
-        while not playsnake.outside(x1, y1):
-            x1 += dx
-            y1 += dy
+    inputs = [0] * (playsnake.GRID_HEIGHT * playsnake.GRID_WIDTH)
+    sn_pos = snake.positions()
+    i = 0
+    for y in range(playsnake.GRID_HEIGHT):
+        for x in range(playsnake.GRID_WIDTH):
+            if x == food.x and y == food.y:
+                inputs[i] = 1
+            elif x == snake.head_x() and y == snake.head_y():
+                inputs[i] = -2
+            elif (x, y) in sn_pos:
+                inputs[i] = -1
             i += 1
-            if (x1, y1) in pos:
-                inputs.append(i)
-                found = True
-                break
-        if not found:
-            inputs.append(0)
-
     return inputs
 
 def orient_neat_snake(snake, net, inputs):
@@ -47,34 +33,32 @@ def orient_neat_snake(snake, net, inputs):
     for i, o in enumerate(output[1:], 1):
         if o > max_out:
             max_i = i
+            max_out = o
 
+    # print(f'output: {output}')
     if max_i == 0:
-        snake.dx, snake.dy = 0, -1
+        pass
     elif max_i == 1:
-        snake.dx, snake.dy = 0, 1
+        snake.dx, snake.dy = LEFT[(snake.dx, snake.dy)]
     elif max_i == 2:
-        snake.dx, snake.dy = -1, 0
-    elif max_i == 2:
-        snake.dx, snake.dy = 1, 0
+        snake.dx, snake.dy = RIGHT[(snake.dx, snake.dy)]
     else:
-        assert RuntimeError("The neural net has more than 4 outputs????")
+        assert RuntimeError("The neural net has more than 3 outputs????")
 
 def eval_genomes(genomes, config):
-    screen, clock = None, None
-    if DISPLAY:
-        pygame.init()
-        screen = pygame.display.set_mode((playsnake.SCRN_WIDTH,
-            playsnake.SCRN_HEIGHT))
-        pygame.display.set_caption("First Individual of this Population")
-        clock = pygame.time.Clock()
-    else:
-        screen = None
+    pygame.init()
+    screen = pygame.display.set_mode((playsnake.SCRN_WIDTH,
+        playsnake.SCRN_HEIGHT))
+    pygame.display.set_caption("First Individual of this Population")
+    clock = pygame.time.Clock()
+    # screen = None
 
     nets = []
     snakes = []
     food_list = []
     gen_list = []
-    for _, genome in genomes:
+    ids = []
+    for id, genome in genomes:
         genome.fitness = 0
 
         net = neat.nn.FeedForwardNetwork.create(genome, config)
@@ -87,35 +71,40 @@ def eval_genomes(genomes, config):
         snakes.append(snake)
         food_list.append(food)
         gen_list.append(genome)
+        ids.append(id)
 
     no_food = [0] * len(snakes)
     first = True
     run = True
     while run and snakes:
-        if DISPLAY:
-            clock.tick(playsnake.FPS)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    run = False
+        clock.tick(playsnake.FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
 
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
-                        run = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    run = False
 
         for net, snake, food, genome in zip(nets, snakes, food_list, gen_list):
             inputs = get_inputs(snake, food)
             orient_neat_snake(snake, net, inputs)
             genome.fitness += 0.1
             snake.move()
+            assert snake.dy != 0 or snake.dx != 0
 
         for i, snake in enumerate(snakes):
             if (playsnake.outside(snake.head_x(), snake.head_y()) or
                 snake.self_collide()):
+                if ids[i] == 1:
+                    print(f'{ids[i]} popped due to death')
+                    playsnake.redraw_screen(screen, snakes[0], food_list[0])
                 nets.pop(i)
                 snakes.pop(i)
                 food_list.pop(i)
                 gen_list.pop(i)
                 no_food.pop(i)
+                ids.pop(i)
                 if i == 0:
                     first = False
 
@@ -126,25 +115,29 @@ def eval_genomes(genomes, config):
             else:
                 no_food[i] += 1
 
-        eleven = 100
+        nf_thresh = 100
         for i, nf in enumerate(no_food):
-            if nf >= eleven:
-                gen_list[i].fitness -= 100
+            if nf >= nf_thresh:
+                gen_list[i].fitness -= 70
         for i, nf in enumerate(no_food):
-            if nf >= eleven:
+            if nf >= nf_thresh:
+                if ids[i] == 1:
+                    print(f'{ids[i]} popped due to time out')
+                    playsnake.redraw_screen(screen, snakes[0], food_list[0])
                 nets.pop(i)
                 snakes.pop(i)
                 food_list.pop(i)
                 gen_list.pop(i)
                 no_food.pop(i)
+
+                ids.pop(i)
                 if i == 0:
                     first = False
 
-        if DISPLAY and first:
+        if first:
             playsnake.redraw_screen(screen, snakes[0], food_list[0])
 
-    if DISPLAY:
-        pygame.quit()
+    pygame.quit()
 
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
@@ -159,7 +152,7 @@ def run(config_file):
     p.add_reporter(stats)
 
     # Run for up to 50 generations.
-    winner = p.run(eval_genomes, 300)
+    winner = p.run(eval_genomes, 500)
 
     # Display the winning genome.
     print('\nBest genome:\n{!s}'.format(winner))
