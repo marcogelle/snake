@@ -3,13 +3,12 @@ import random
 from typing import Tuple, Set
 import os
 import neat
-import visualize
 import playsnake
 
-def get_inputs(snake, food, dx, dy):
+def get_inputs(snake, food):
     pass
 
-def orient_neat_snake(net, snake, food, genome):
+def orient_neat_snake(net, snake, food):
     pass
 
 def eval_genomes(genomes, config):
@@ -34,7 +33,7 @@ def eval_genomes(genomes, config):
     while len(snakes) > 0:
         for net, snake, food, genome in zip(nets, snakes, food_list, gen_list):
             inputs = get_inputs(snake, food)
-            orient_neat_snake(net, snake, food, genome)
+            orient_neat_snake(net, snake, food)
             genome.fitness += 0.1
             snake.move()
 
@@ -46,7 +45,9 @@ def eval_genomes(genomes, config):
                 food_list.pop(i)
                 gen_list.pop(i)
 
-        playsnake.check_food(snake, food)
+        for snake, food, genome in zip(snakes, food_list, gen_list):
+            if playsnake.update_food(snake, food):
+                genome.fitness += 10
 
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,

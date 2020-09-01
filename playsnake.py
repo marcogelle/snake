@@ -119,10 +119,12 @@ def update_snake_dir(snake: Snake, event: pygame.event.Event) -> None:
 def outside(x: int, y: int) -> bool:
     return x < 0 or x >= GRID_WIDTH or y < 0 or y >= GRID_HEIGHT
 
-def update_food(snake: Snake, food: Food) -> None:
+def update_food(snake: Snake, food: Food) -> bool:
     if food.x == snake.head_x() and food.y == snake.head_y():
         snake.grow()
         food.spawn(snake)
+        return True
+    return False
 
 def redraw_screen(screen: pygame.Surface, snake: Snake, food: Food) -> None:
     screen.fill(BG_COLOR)
