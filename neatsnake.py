@@ -9,11 +9,14 @@ import playsnake
 def get_inputs(snake, food, dx, dy):
     pass
 
+def orient_neat_snake(net, snake, food, genome):
+    pass
+
 def eval_genomes(genomes, config):
     nets = []
     snakes = []
     food_list = []
-    ge = []
+    gen_list = []
     for _, genome in genomes:
         genome.fitness = 0
 
@@ -26,26 +29,22 @@ def eval_genomes(genomes, config):
         nets.append(net)
         snakes.append(snake)
         food_list.append(food)
-        ge.append(genome)
+        gen_list.append(genome)
 
+    while len(snakes) > 0:
+        for net, snake, food, genome in zip(nets, snakes, food_list, gen_list):
+            inputs = get_inputs(snake, food)
+            orient_neat_snake(net, snake, food, genome)
+            genome.fitness += 0.1
+            snake.move()
 
-
-
-
-    dx, dy = 0, 0
-
-    run = True
-    while run:
-        inputs = get_inputs(snake, food, dx, dy)
-
-
-
-        snake.move(dx, dy)
-        if (playsnake.outside(snake.head_x(), snake.head_y())):
-            run = False
-
-        if snake.self_collide():
-            run = False
+        for i, snake in enumerate(snakes):
+            if (playsnake.outside(snake.head_x(), snake.head_y()) or
+                snake.self_collide()):
+                nets.pop(i)
+                snakes.pop(i)
+                food_list.pop(i)
+                gen_list.pop(i)
 
         playsnake.check_food(snake, food)
 
