@@ -41,6 +41,8 @@ class Snake:
     def __init__(self, x: int, y: int, screen:pygame.Surface = None) -> None:
         self.screen = screen
         self.parts = [SnakeHead(x, y, self.screen)]
+        self.dx = 0
+        self.dy = 0
 
     def __len__(self):
         return len(self.parts)
@@ -49,14 +51,16 @@ class Snake:
         for part in self.parts:
             part.draw()
 
-    def move(self, dx, dy) -> None:
+    def move(self) -> None:
         head = self.parts[0]
         trail_x, trail_y = head.x, head.y
-        head.move(dx, dy)
+        head.move(self.dx, self.dy)
+
+        dx1, dy1 = self.dx, self.dy
         for part in self.parts[1:]:
-            dx, dy = trail_x - part.x, trail_y - part.y
+            dx1, dy1 = trail_x - part.x, trail_y - part.y
             trail_x, trail_y = part.x, part.y
-            part.move(dx, dy)
+            part.move(dx1, dy1)
 
     def self_collide(self) -> bool:
         if (len(self) == 1 + Snake.growth_factor and
@@ -94,16 +98,22 @@ class Food(Square):
             self.x = random.randrange(GRID_WIDTH)
             self.y = random.randrange(GRID_HEIGHT)
 
-def update_snake_dir(snake: Snake, event: pygame.event.Event, dx: int, dy: int) -> Tuple[int, int]:
-    if event.key in {pygame.K_UP, ord('w')} and (dy != 1 or len(snake) == 1):
-        dx, dy = 0, -1
-    if event.key in {pygame.K_DOWN, ord('s')} and (dy != -1 or len(snake) == 1):
-        dx, dy = 0, 1
-    if event.key in {pygame.K_LEFT, ord('a')} and (dx != 1 or len(snake) == 1):
-        dx, dy = -1, 0
-    if event.key in {pygame.K_RIGHT, ord('d')} and (dx != -1 or len(snake) == 1):
-        dx, dy = 1, 0
-    return dx, dy
+def update_snake_dir(snake: Snake, event: pygame.event.Event) -> None:
+    if event.key in {pygame.K_UP, ord('w')} and (snake.dy != 1 or
+        len(snake) == 1):
+        snake.dx, snake.dy = 0, -1
+
+    if event.key in {pygame.K_DOWN, ord('s')} and (snake.dy != -1 or
+        len(snake) == 1):
+        snake.dx, snake.dy = 0, 1
+
+    if event.key in {pygame.K_LEFT, ord('a')} and (snake.dx != 1 or
+        len(snake) == 1):
+        snake.dx, snake.dy = -1, 0
+
+    if event.key in {pygame.K_RIGHT, ord('d')} and (snake.dx != -1 or
+        len(snake) == 1):
+        snake.dx, snake.dy = 1, 0
 
 def outside(x: int, y: int) -> bool:
     return x < 0 or x >= GRID_WIDTH or y < 0 or y >= GRID_HEIGHT
@@ -130,7 +140,6 @@ def run_game() -> None:
         GRID_HEIGHT), screen)
     food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0,
         GRID_HEIGHT), screen)
-    dx, dy = 0, 0
 
     # mainloop
     run = True
@@ -143,9 +152,9 @@ def run_game() -> None:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     run = False
-                dx, dy = update_snake_dir(snake, event, dx, dy)
+                update_snake_dir(snake, event)
 
-        snake.move(dx, dy)
+        snake.move()
         if (outside(snake.head_x(), snake.head_y())):
             run = False
 
