@@ -6,7 +6,7 @@ SCRN_HEIGHT = 600
 SCRN_WIDTH = 600
 FPS = 14
 BG_COLOR = (0, 0, 0)
-GRID_SIZE = 20
+GRID_SIZE = 60
 GRID_HEIGHT = SCRN_HEIGHT // GRID_SIZE
 GRID_WIDTH = SCRN_WIDTH // GRID_SIZE
 
@@ -23,7 +23,8 @@ class Square:
             raise TypeError('Cannot draw a square with no associated screen.')
         x_coord = self.x * GRID_SIZE
         y_coord = self.y * GRID_SIZE
-        pygame.draw.rect(self.screen, self.color, (x_coord, y_coord, GRID_SIZE, GRID_SIZE))
+        pygame.draw.rect(self.screen, self.color, (x_coord, y_coord, GRID_SIZE,
+            GRID_SIZE))
 
 class SnakePart(Square):
     color = (102, 255, 0)
