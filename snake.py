@@ -13,12 +13,14 @@ GRID_WIDTH = SCRN_WIDTH // GRID_SIZE
 class Square:
     color = None
 
-    def __init__(self, x: int, y: int, screen: pygame.Surface) -> None:
+    def __init__(self, x: int, y: int, screen:pygame.Surface = None) -> None:
         self.x = x
         self.y = y
         self.screen = screen
 
     def draw(self):
+        if self.screen is None:
+            raise TypeError('Cannot draw a square with no associated screen.')
         x_coord = self.x * GRID_SIZE
         y_coord = self.y * GRID_SIZE
         pygame.draw.rect(self.screen, self.color, (x_coord, y_coord, GRID_SIZE, GRID_SIZE))
@@ -36,7 +38,7 @@ class SnakeHead(SnakePart):
 class Snake:
     growth_factor = 3
 
-    def __init__(self, x: int, y: int, screen: pygame.Surface) -> None:
+    def __init__(self, x: int, y: int, screen:pygame.Surface = None) -> None:
         self.screen = screen
         self.parts = [SnakeHead(x, y, self.screen)]
 
@@ -123,9 +125,9 @@ def run_game() -> None:
 
     snake = Snake(random.randrange(0, GRID_WIDTH), random.randrange(0,
         GRID_HEIGHT), screen)
-    dx, dy = 0, 0
     food = Food(random.randrange(0, GRID_WIDTH), random.randrange(0,
         GRID_HEIGHT), screen)
+    dx, dy = 0, 0
 
     # mainloop
     run = True
