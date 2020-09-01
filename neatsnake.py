@@ -6,12 +6,20 @@ import neat
 import playsnake
 
 def get_inputs(snake, food):
-    pass
+    return [1] * 24 # dummy function, will replace later
 
 def orient_neat_snake(net, snake, food):
-    pass
+    # dummy function, will replace later
+    snake.dx = 1
+    snake.dy = 0
 
 def eval_genomes(genomes, config):
+    pygame.init()
+    screen = pygame.display.set_mode((playsnake.SCRN_WIDTH,
+        playsnake.SCRN_HEIGHT))
+    pygame.display.set_caption("Snake from First Genome of this Population")
+    clock = pygame.time.Clock()
+
     nets = []
     snakes = []
     food_list = []
@@ -21,16 +29,26 @@ def eval_genomes(genomes, config):
 
         net = neat.nn.FeedForwardNetwork.create(genome, config)
         snake = playsnake.Snake(random.randrange(0, playsnake.GRID_WIDTH),
-            random.randrange(0, playsnake.GRID_HEIGHT))
+            random.randrange(0, playsnake.GRID_HEIGHT), screen)
         food = playsnake.Food(random.randrange(0, playsnake.GRID_WIDTH),
-            random.randrange(0, playsnake.GRID_HEIGHT))
+            random.randrange(0, playsnake.GRID_HEIGHT), screen)
 
         nets.append(net)
         snakes.append(snake)
         food_list.append(food)
         gen_list.append(genome)
 
-    while len(snakes) > 0:
+    run = True
+    while run and snakes:
+        clock.tick(playsnake.FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    run = False
+
         for net, snake, food, genome in zip(nets, snakes, food_list, gen_list):
             inputs = get_inputs(snake, food)
             orient_neat_snake(net, snake, food)
@@ -48,6 +66,11 @@ def eval_genomes(genomes, config):
         for snake, food, genome in zip(snakes, food_list, gen_list):
             if playsnake.update_food(snake, food):
                 genome.fitness += 10
+
+        if snakes:
+            playsnake.redraw_screen(screen, snakes[0], food_list[0])
+
+    pygame.quit()
 
 def run(config_file):
     config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction,
